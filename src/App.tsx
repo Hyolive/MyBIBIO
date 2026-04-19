@@ -79,7 +79,7 @@ function Navbar() {
   const navigate = useNavigate();
 
   return (
-    <nav className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between sticky top-0 z-50">
+    <nav className="bg-white border-b border-gray-200 px-4 sm:px-6 py-4 flex flex-wrap items-center justify-between gap-4 sticky top-0 z-50">
       <div className="flex items-center gap-2">
         <div className="bg-indigo-600 p-2 rounded-lg">
           <BookIcon className="text-white w-6 h-6" />
@@ -88,8 +88,8 @@ function Navbar() {
       </div>
 
       {user && (
-        <div className="flex items-center gap-6">
-          <div className="flex items-center gap-4 text-sm font-medium text-gray-600">
+        <div className="flex items-center gap-4 sm:gap-6 w-full sm:w-auto justify-between sm:justify-end overflow-x-auto pb-1 no-scrollbar">
+          <div className="flex items-center gap-4 text-sm font-medium text-gray-600 whitespace-nowrap">
             {user.role === 'admin' && (
               <>
                 <Link to="/admin" className="hover:text-indigo-600 transition-colors">Dashboard</Link>
@@ -112,10 +112,10 @@ function Navbar() {
             )}
           </div>
           
-          <div className="h-6 w-px bg-gray-200" />
+          <div className="hidden sm:block h-6 w-px bg-gray-200" />
           
           <div className="flex items-center gap-3">
-            <div className="text-right">
+            <div className="hidden sm:block text-right">
               <p className="text-sm font-semibold text-gray-900">{user.name}</p>
               <p className="text-xs text-gray-500 capitalize">{user.role}</p>
             </div>
@@ -232,7 +232,7 @@ function LoginPage() {
               value={identifier}
               onChange={(e) => setIdentifier(e.target.value)}
               className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none"
-              placeholder={role === 'admin' ? 'admin@bibio.univ' : 'Ex: 123456789'}
+              placeholder={role === 'admin' ? 'Ex: email@univ.dz' : 'Ex: 123456789'}
             />
           </div>
 
@@ -380,22 +380,22 @@ function AdminDashboard() {
   if (loading) return <div className="p-8 text-center">Chargement...</div>;
 
   return (
-    <div className="p-8 max-w-7xl mx-auto">
-      <div className="flex justify-between items-center mb-8">
+    <div className="p-4 sm:p-8 max-w-7xl mx-auto">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Tableau de Bord Admin</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Tableau de Bord Admin</h1>
           <p className="text-gray-500">Vue d'ensemble de la bibliothèque</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3 w-full sm:w-auto">
           <button 
             onClick={exportDailyReport}
-            className="flex items-center gap-2 bg-emerald-600 text-white px-6 py-2 rounded-xl hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100"
+            className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-emerald-600 text-white px-4 sm:px-6 py-2 rounded-xl hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100 text-sm sm:text-base"
           >
             <FileDown className="w-4 h-4" /> Rapport du Jour
           </button>
           <button 
             onClick={exportData}
-            className="flex items-center gap-2 bg-indigo-600 text-white px-6 py-2 rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100"
+            className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-indigo-600 text-white px-4 sm:px-6 py-2 rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 text-sm sm:text-base"
           >
             <FileDown className="w-4 h-4" /> Export Complet
           </button>
@@ -460,15 +460,15 @@ function StatCard({ icon, label, value, color }: { icon: React.ReactNode, label:
 function QuickActionCard({ title, description, icon, link, color }: { title: string, description: string, icon: React.ReactNode, link: string, color: string }) {
   return (
     <Link to={link} className="group">
-      <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all flex items-center gap-6">
-        <div className={cn("p-4 rounded-2xl transition-all group-hover:scale-110", `bg-${color}-50 text-${color}-600`)}>
+      <div className="bg-white p-6 sm:p-8 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-4 sm:gap-6">
+        <div className={cn("p-4 rounded-2xl transition-all group-hover:scale-110 shrink-0", `bg-${color}-50 text-${color}-600`)}>
           {icon}
         </div>
-        <div>
-          <h3 className="text-xl font-bold text-gray-900 mb-1">{title}</h3>
-          <p className="text-gray-500">{description}</p>
+        <div className="flex-1">
+          <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-1">{title}</h3>
+          <p className="text-gray-500 text-sm sm:text-base">{description}</p>
         </div>
-        <ChevronRight className="ml-auto text-gray-300 group-hover:text-gray-600 transition-colors" />
+        <ChevronRight className="hidden sm:block ml-auto text-gray-300 group-hover:text-gray-600 transition-colors shrink-0" />
       </div>
     </Link>
   );
@@ -500,13 +500,13 @@ function AdminBooks() {
   useEffect(() => { fetchBooks(); }, []);
 
   return (
-    <div className="p-8 max-w-7xl mx-auto">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Catalogue des Livres</h1>
+    <div className="p-4 sm:p-8 max-w-7xl mx-auto">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Catalogue des Livres</h1>
       </div>
 
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        <table className="w-full text-left">
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-x-auto">
+        <table className="w-full text-left min-w-[600px]">
           <thead className="bg-gray-50 border-b border-gray-100">
             <tr>
               <th className="px-6 py-4 text-sm font-semibold text-gray-600">Livre</th>
