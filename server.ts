@@ -1,6 +1,5 @@
 import express from "express";
 import path from "path";
-import { fileURLToPath } from "url";
 import cors from "cors";
 import session from "express-session";
 import bcrypt from "bcryptjs";
@@ -9,8 +8,7 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// Removed __filename and __dirname as they are unused and cause issues with Vercel's CJS transpilation
 
 // Supabase Setup helper
 let supabase: any;
@@ -27,7 +25,7 @@ export async function createServer() {
   }
 
   const formattedUrl = supabaseUrl.startsWith('http') ? supabaseUrl : `https://${supabaseUrl}.supabase.co`;
-  
+
   if (!supabase) {
     try {
       supabase = createClient(formattedUrl, supabaseKey);
@@ -51,15 +49,15 @@ export async function createServer() {
     try {
       // Only seed once in a while or based on a flag to avoid slow requests
       if (process.env.SKIP_SEED === "true") return;
-      
+
       console.log("Ensuring default admin exists...");
       const { error } = await supabase
         .from('admins')
         .upsert([
-          { 
-            name: 'Administrateur', 
-            email: 'admin@bibio.univ', 
-            password: 'admin123' 
+          {
+            name: 'Administrateur',
+            email: 'admin@bibio.univ',
+            password: 'admin123'
           }
         ], { onConflict: 'email' });
 
@@ -80,8 +78,8 @@ export async function createServer() {
 
   // Health Check
   app.get(["/api/health", "/api/"], (req, res) => {
-    res.json({ 
-      status: "ok", 
+    res.json({
+      status: "ok",
       time: new Date().toISOString(),
       supabase: !!supabaseUrl ? "configured" : "missing",
       vercel: !!process.env.VERCEL
@@ -92,9 +90,9 @@ export async function createServer() {
   app.post("/api/auth/admin/login", async (req, res) => {
     const email = req.body.email?.trim().toLowerCase();
     const password = req.body.password?.trim();
-    
+
     console.log(`Login attempt for: ${email}`);
-    
+
     try {
       const { data: admin, error } = await supabase
         .from('admins')
@@ -191,7 +189,7 @@ export async function createServer() {
         .from('book_items')
         .select('*')
         .eq('book_id', req.params.id);
-      
+
       if (error) throw error;
       res.json(items);
     } catch (e) {
@@ -202,7 +200,7 @@ export async function createServer() {
   app.post("/api/books", async (req, res) => {
     const { title, author, barcode, image_url, quantity } = req.body;
     const qty = parseInt(quantity) || 1;
-    
+
     try {
       // Step 1: Insert Book
       const { data: book, error: bookError } = await supabase
@@ -230,7 +228,7 @@ export async function createServer() {
     } catch (e: any) {
       console.error("Supabase Error:", e);
       const message = e.code === '23505' // Unique constraint violation in Postgres
-        ? "Ce code-barres est déjà utilisé par un autre livre." 
+        ? "Ce code-barres est déjà utilisé par un autre livre."
         : "Erreur lors de l'enregistrement : " + (e.message || "Erreur inconnue");
       res.status(400).json({ success: false, message });
     }
@@ -249,7 +247,7 @@ export async function createServer() {
   // Borrowing
   app.post("/api/borrow", async (req, res) => {
     const { rfid_card, barcode, return_date } = req.body;
-    
+
     try {
       // 1. Get Student
       const { data: student, error: studentErr } = await supabase.from('students').select('id').eq('rfid_card', rfid_card).single();
@@ -258,7 +256,7 @@ export async function createServer() {
       // 2. Get Item
       // Try unique code first
       let { data: item, error: itemErr } = await supabase.from('book_items').select('*').eq('unique_code', barcode).single();
-      
+
       // If not found, try general barcode
       if (!item) {
         const { data: book } = await supabase.from('books').select('id').eq('barcode', barcode).single();
@@ -297,11 +295,11 @@ export async function createServer() {
   app.post("/api/return", async (req, res) => {
     const { barcode } = req.body;
     console.log(`Return request for barcode: ${barcode}`);
-    
+
     try {
       // 1. Find the item
       let { data: item } = await supabase.from('book_items').select('*').eq('unique_code', barcode).maybeSingle();
-      
+
       if (!item) {
         const { data: book } = await supabase.from('books').select('id').eq('barcode', barcode).maybeSingle();
         if (book) {
@@ -340,7 +338,7 @@ export async function createServer() {
         .from('borrowings')
         .update({ returned: true, returned_at: new Date().toISOString() })
         .eq('id', activeBorrowing.id);
-      
+
       if (retErr) throw retErr;
 
       // 4. Update item status
@@ -427,7 +425,7 @@ export async function createServer() {
 
   app.post("/api/students", async (req, res) => {
     const { name, rfid_card, password } = req.body;
-    
+
     try {
       if (!name || !rfid_card || !password) {
         return res.status(400).json({ success: false, message: "Tous les champs sont obligatoires (Nom, RFID, Mot de passe)" });
@@ -435,31 +433,31 @@ export async function createServer() {
 
       console.log(`Creating student attempt: ${name} (${rfid_card})`);
       const hashedPassword = bcrypt.hashSync(password, 10);
-      
+
       const { error } = await supabase
         .from('students')
         .insert([{ name, rfid_card, password: hashedPassword }]);
 
       if (error) {
         console.error("Supabase error detail:", JSON.stringify(error, null, 2));
-        
+
         let userMessage = `Erreur Supabase : ${error.message}`;
         if (error.code === '23505') {
           userMessage = "Cette carte RFID est déjà enregistrée pour un autre étudiant.";
         }
 
-        return res.status(400).json({ 
-          success: false, 
-          message: userMessage 
+        return res.status(400).json({
+          success: false,
+          message: userMessage
         });
       }
 
       res.json({ success: true });
     } catch (e: any) {
       console.error("Unexpected error during student creation:", e);
-      res.status(500).json({ 
-        success: false, 
-        message: `Erreur inattendue : ${e.message || 'Problème serveur'}` 
+      res.status(500).json({
+        success: false,
+        message: `Erreur inattendue : ${e.message || 'Problème serveur'}`
       });
     }
   });
@@ -467,7 +465,7 @@ export async function createServer() {
   // Security Scan
   app.post("/api/security/scan", async (req, res) => {
     const { barcode } = req.body;
-    
+
     try {
       // 1. Precise item search
       const { data: item } = await supabase
@@ -475,7 +473,7 @@ export async function createServer() {
         .select('*, books(id, title)')
         .eq('unique_code', barcode)
         .single();
-      
+
       const realItem: any = item;
 
       if (realItem) {
@@ -484,10 +482,10 @@ export async function createServer() {
           return res.json({ authorized: true, alarm: false });
         } else {
           await supabase.from('security_logs').insert([{ book_id: realItem.books.id, status: 'vol suspecté' }]);
-          return res.json({ 
-            authorized: false, 
-            alarm: true, 
-            message: `ALERTE VOL : L'exemplaire ${realItem.unique_code} de "${realItem.books.title}" n'est pas enregistré comme emprunté !` 
+          return res.json({
+            authorized: false,
+            alarm: true,
+            message: `ALERTE VOL : L'exemplaire ${realItem.unique_code} de "${realItem.books.title}" n'est pas enregistré comme emprunté !`
           });
         }
       }
@@ -501,16 +499,16 @@ export async function createServer() {
           .select('*', { count: 'exact', head: true })
           .eq('book_id', book.id)
           .eq('status', 'borrowed');
-        
+
         if (count !== null && count > 0) {
           await supabase.from('security_logs').insert([{ book_id: book.id, status: 'authorized' }]);
           return res.json({ authorized: true, alarm: false });
         } else {
           await supabase.from('security_logs').insert([{ book_id: book.id, status: 'vol suspecté' }]);
-          return res.json({ 
-            authorized: false, 
-            alarm: true, 
-            message: `ALERTE VOL : Aucun exemplaire de "${book.title}" n'est enregistré comme emprunté actuellement dans le système !` 
+          return res.json({
+            authorized: false,
+            alarm: true,
+            message: `ALERTE VOL : Aucun exemplaire de "${book.title}" n'est enregistré comme emprunté actuellement dans le système !`
           });
         }
       }
@@ -530,7 +528,7 @@ export async function createServer() {
         .from('security_logs')
         .select('*, books(title, barcode)')
         .order('detection_time', { ascending: false });
-      
+
       if (error) throw error;
       const formatted = data.map((l: any) => ({
         ...l,
@@ -547,7 +545,7 @@ export async function createServer() {
   app.get("/api/admin/daily-report", async (req, res) => {
     const today = new Date().toISOString().split('T')[0];
     const nextDay = new Date(new Date().getTime() + 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-    
+
     try {
       const { data: borrowings } = await supabase.from('borrowings').select('*, students(name), book_items(*, books(*))').gte('borrow_date', today).lt('borrow_date', nextDay);
       const { data: returns } = await supabase.from('borrowings').select('*, students(name), book_items(*, books(*))').eq('returned', true).gte('returned_at', today).lt('returned_at', nextDay);
@@ -588,12 +586,12 @@ export async function createServer() {
         request_status: 'pending',
         created_at: new Date().toISOString()
       }]);
-      
+
       if (error) {
         console.error("Supabase error during card request:", JSON.stringify(error, null, 2));
         throw error;
       }
-      
+
       res.json({ success: true });
     } catch (e: any) {
       console.error("Critical card request error:", e.message || e);
