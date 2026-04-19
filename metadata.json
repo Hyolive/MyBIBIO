@@ -1,0 +1,5 @@
+{
+  "name": "MY BIBIO",
+  "description": "Système de gestion de bibliothèque universitaire intelligente avec authentification RFID, chatbot FAQ et détection de vol en temps réel.",
+  "requestFramePermissions": []
+}
