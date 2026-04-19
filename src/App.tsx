@@ -1328,7 +1328,7 @@ function CardRequestPage() {
         <div className="absolute top-0 left-8 right-8 h-[3px] bg-gradient-to-r from-transparent via-blue-600 to-transparent"></div>
 
         <div className="text-right mb-4">
-          <img src="https://mosta-sup.com/wp-content/uploads/2021/05/cropped-logo_mosta.png" alt="Logo Université" className="w-16 h-16 ml-auto object-contain" />
+          <img src="/logo-univ.png" alt="Logo Université" className="w-16 h-16 ml-auto object-contain" />
         </div>
 
         <div className="mb-10 text-center sm:text-left">
@@ -1541,7 +1541,7 @@ function CardRequestPage() {
           onClick={() => setShowIqraa(true)}
           className="bg-white p-4 rounded-2xl rounded-bl-sm shadow-xl border border-blue-100 w-48 text-left hover:-translate-y-1 transition-all group"
         >
-          <img src="https://mosta-sup.com/wp-content/uploads/2021/05/cropped-logo_mosta.png" alt="Logo Iqraa" className="h-12 object-contain mb-2 flex items-center justify-center" />
+          <img src="/logo-iqraa.png" alt="Logo Iqraa" className="h-12 object-contain mb-2 flex items-center justify-center" />
           <p className="font-playfair font-bold text-slate-800 leading-tight">C'est quoi Iqraa ?</p>
           <p className="text-[0.65rem] text-slate-400 mt-1 uppercase tracking-widest group-hover:text-blue-600 transition-colors">En savoir plus →</p>
         </button>
@@ -1591,7 +1591,7 @@ function CardRequestPage() {
                 ) : (
                   <>
                     <div className="flex items-center gap-4 mb-6">
-                      <img src="https://mosta-sup.com/wp-content/uploads/2021/05/cropped-logo_mosta.png" alt="University Logo" className="h-16" />
+                      <img src="/logo-iqraa.png" alt="Iqraa Logo" className="h-16 object-contain" />
                       <div>
                         <p className="text-[0.6rem] font-bold text-blue-600 uppercase tracking-[0.2em] mb-1">Service Bibliothèque</p>
                         <h2 className="text-3xl font-playfair font-bold text-slate-900">Iqraa</h2>
