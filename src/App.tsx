@@ -899,7 +899,7 @@ function SecurityScanner() {
   useEffect(() => { 
     fetchLogs();
     // Use a more reliable sound source or handle errors
-    const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3');
+    const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/995/995-preview.mp3');
     audio.addEventListener('error', (e) => {
       console.warn("Audio failed to load, security scanner will use visual alerts only.", e);
       alarmAudio.current = null;
