@@ -12,20 +12,29 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Supabase Setup
-const supabaseUrl = process.env.SUPABASE_URL || "";
-const supabaseKey = process.env.SUPABASE_KEY || "";
-
-if (!supabaseUrl || !supabaseKey) {
-  console.error("FATAL: SUPABASE_URL or SUPABASE_KEY missing in environments.");
-}
-
-const formattedUrl = supabaseUrl.startsWith('http') ? supabaseUrl : `https://${supabaseUrl}.supabase.co`;
-const supabase = createClient(formattedUrl, supabaseKey);
+// Supabase Setup helper
+let supabase: any;
 
 export async function createServer() {
   const app = express();
   const PORT = 3000;
+
+  const supabaseUrl = process.env.SUPABASE_URL || "";
+  const supabaseKey = process.env.SUPABASE_KEY || "";
+
+  if (!supabaseUrl || !supabaseKey) {
+    console.error("FATAL: SUPABASE_URL or SUPABASE_KEY missing in environments.");
+  }
+
+  const formattedUrl = supabaseUrl.startsWith('http') ? supabaseUrl : `https://${supabaseUrl}.supabase.co`;
+  
+  if (!supabase) {
+    try {
+      supabase = createClient(formattedUrl, supabaseKey);
+    } catch (e) {
+      console.error("Failed to initialize Supabase client:", e);
+    }
+  }
 
   app.use(cors());
   app.use(express.json({ limit: '10mb' }));
