@@ -2,14 +2,18 @@ import { createServer } from '../server';
 
 let cachedApp: any;
 
-export default async (req: any, res: any) => {
+export default async function handler(req: any, res: any) {
   try {
-    console.log(`Vercel function called: ${req.url}`);
     if (!cachedApp) {
-      console.log("Initializing Express app...");
       cachedApp = await createServer();
     }
-    return cachedApp(req, res);
+    
+    // Ensure the Serverless Function stays alive until Express finishes
+    return new Promise((resolve, reject) => {
+      res.once('finish', resolve);
+      res.once('error', reject);
+      cachedApp(req, res);
+    });
   } catch (error: any) {
     console.error("VERCEL API CRASH:", error);
     res.status(500).json({ 
@@ -18,4 +22,4 @@ export default async (req: any, res: any) => {
       stack: error.stack 
     });
   }
-};
+}

@@ -734,8 +734,10 @@ export async function createServer() {
     res.status(404).json({ error: "API Route not found", url: req.originalUrl });
   });
 
-  if (process.env.NODE_ENV !== "production") {
-    const { createServer: createViteServer } = await import("vite");
+  if (!process.env.VERCEL && process.env.NODE_ENV !== "production") {
+    // Hide Vite import from Vercel's bundler to prevent native dependency issues
+    const viteModuleName = "vite";
+    const { createServer: createViteServer } = await import(viteModuleName);
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",
@@ -752,12 +754,12 @@ export async function createServer() {
   return app;
 }
 
-// Only start the server if this file is run directly
-if (process.env.NODE_ENV !== "production" || process.env.START_SERVER === "true") {
+// Only start the server if this file is run directly (not on Vercel)
+if (!process.env.VERCEL && (process.env.NODE_ENV !== "production" || process.env.START_SERVER === "true")) {
   createServer().then((app) => {
-    const PORT = 3000;
-    app.listen(PORT, "0.0.0.0", () => {
-      console.log(`Server running on http://localhost:${PORT}`);
+    const PORT = process.env.PORT || 3000;
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
     });
   });
 }
