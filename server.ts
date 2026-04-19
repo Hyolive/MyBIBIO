@@ -63,7 +63,9 @@ export async function createServer() {
       console.error("Critical seeding error:", e);
     }
   };
-  seedAdmin();
+  if (!process.env.VERCEL) {
+    seedAdmin();
+  }
 
   // --- API Routes ---
 
