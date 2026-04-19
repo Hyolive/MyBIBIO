@@ -1328,7 +1328,7 @@ function CardRequestPage() {
         <div className="absolute top-0 left-8 right-8 h-[3px] bg-gradient-to-r from-transparent via-blue-600 to-transparent"></div>
 
         <div className="text-right mb-4">
-          <img src="/logo-univ.png" alt="Logo Université" className="w-16 h-16 ml-auto object-contain" />
+          <img src="/logo-univ.jpg" alt="Logo Université" className="w-16 h-16 ml-auto object-contain" />
         </div>
 
         <div className="mb-10 text-center sm:text-left">
