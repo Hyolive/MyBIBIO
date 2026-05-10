@@ -6,10 +6,6 @@ try {
     const sheet_name_list = workbook.SheetNames;
     const data = xlsx.utils.sheet_to_json(workbook.Sheets[sheet_name_list[0]]);
 
-    let sql = `-- Fichier d'importation généré automatiquement\n`;
-    sql += `TRUNCATE TABLE borrowings, security_logs, book_items, books RESTART IDENTITY CASCADE;\n\n`;
-
-    // Extract unique books and all items
     const booksMap = new Map();
     const items = [];
     const seenNdinv = new Set();
@@ -26,7 +22,6 @@ try {
         if (seenNdinv.has(ndinv)) ndinv = `${ndinv}-DUB-${index}`;
         seenNdinv.add(ndinv);
 
-        // Map books to avoid duplicate inserts
         if (!booksMap.has(cote)) {
             booksMap.set(cote, { title: titre, author: auteur, quantity: 1 });
         } else {
@@ -36,27 +31,51 @@ try {
         items.push({ cote, ndinv });
     });
 
-    // 1. Insert Books
-    sql += `-- 1. Insertion des livres uniques\n`;
-    sql += `INSERT INTO books (barcode, title, author, quantity) VALUES\n`;
+    const CHUNK_SIZE = 2000;
     
     const booksValues = [];
     booksMap.forEach((val, key) => {
         booksValues.push(`('${key}', '${val.title}', '${val.author}', ${val.quantity})`);
     });
-    sql += booksValues.join(',\n') + ';\n\n';
 
-    // 2. Insert Items using Subqueries
-    sql += `-- 2. Insertion des exemplaires individuels\n`;
-    sql += `INSERT INTO book_items (book_id, unique_code, status) VALUES\n`;
-    
     const itemsValues = items.map(item => 
         `((SELECT id FROM books WHERE barcode = '${item.cote}'), '${item.ndinv}', 'available')`
     );
-    sql += itemsValues.join(',\n') + ';\n';
 
-    fs.writeFileSync('import_books.sql', sql, 'utf8');
-    console.log(`Génération réussie ! ${items.length} exemplaires et ${booksMap.size} livres uniques traités.`);
+    let fileCount = 1;
+    let sql = `-- Fichier d'importation Partie ${fileCount}\n`;
+    sql += `TRUNCATE TABLE borrowings, security_logs, book_items, books RESTART IDENTITY CASCADE;\n\n`;
+
+    // 1. Process books in chunks
+    for (let i = 0; i < booksValues.length; i += CHUNK_SIZE) {
+        if (i > 0) {
+            fs.writeFileSync(`import_books_part${fileCount}.sql`, sql, 'utf8');
+            fileCount++;
+            sql = `-- Fichier d'importation Partie ${fileCount}\n\n`;
+        }
+        
+        const booksChunk = booksValues.slice(i, i + CHUNK_SIZE);
+        sql += `-- Insertion des livres uniques (Partie ${fileCount})\n`;
+        sql += `INSERT INTO books (barcode, title, author, quantity) VALUES\n`;
+        sql += booksChunk.join(',\n') + ';\n\n';
+    }
+    
+    // 2. Process items in chunks
+    for (let i = 0; i < itemsValues.length; i += CHUNK_SIZE) {
+        fs.writeFileSync(`import_books_part${fileCount}.sql`, sql, 'utf8');
+        fileCount++;
+        sql = `-- Fichier d'importation Partie ${fileCount}\n\n`;
+        
+        const itemsChunk = itemsValues.slice(i, i + CHUNK_SIZE);
+        sql += `-- Insertion des exemplaires (Partie ${fileCount})\n`;
+        sql += `INSERT INTO book_items (book_id, unique_code, status) VALUES\n`;
+        sql += itemsChunk.join(',\n') + ';\n\n';
+    }
+    
+    // Write the last file
+    fs.writeFileSync(`import_books_part${fileCount}.sql`, sql, 'utf8');
+    
+    console.log(`Génération réussie ! Les requêtes ont été séparées en ${fileCount} fichiers.`);
 
 } catch (err) {
     console.error("Erreur:", err);
