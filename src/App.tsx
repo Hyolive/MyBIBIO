@@ -1951,6 +1951,218 @@ function AdminMessages() {
   );
 }
 
+// --- Kiosk Pages ---
+
+function KioskBorrow() {
+  const [rfid, setRfid] = useState('');
+  const [barcode, setBarcode] = useState('');
+  const [statusMsg, setStatusMsg] = useState('');
+  const rfidRef = useRef<HTMLInputElement>(null);
+  const barcodeRef = useRef<HTMLInputElement>(null);
+
+  const defaultDate = new Date();
+  defaultDate.setDate(defaultDate.getDate() + 30);
+  const returnDate = defaultDate.toISOString().split('T')[0];
+
+  const handleBorrow = async () => {
+    try {
+      const res = await fetch('/api/borrow', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rfid_card: rfid, barcode, return_date: returnDate })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setStatusMsg(`Succès ! Livre emprunté.`);
+      } else {
+        setStatusMsg(`Erreur : ${data.message}`);
+      }
+    } catch (e) {
+      setStatusMsg("Erreur réseau");
+    }
+    
+    // Reset after 3 seconds
+    setTimeout(() => {
+      setRfid('');
+      setBarcode('');
+      setStatusMsg('');
+      rfidRef.current?.focus();
+    }, 3000);
+  };
+
+  useEffect(() => {
+    if (rfid.length >= 4 && barcode.length >= 4) {
+      const timer = setTimeout(() => {
+        handleBorrow();
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [rfid, barcode]);
+
+  useEffect(() => {
+    if (rfid && !barcode) {
+      barcodeRef.current?.focus();
+    }
+  }, [rfid]);
+
+  // Keep focus on the active input if user clicks away
+  useEffect(() => {
+    const handleGlobalClick = () => {
+      if (!statusMsg) {
+        if (!rfid) rfidRef.current?.focus();
+        else if (!barcode) barcodeRef.current?.focus();
+      }
+    };
+    window.addEventListener('click', handleGlobalClick);
+    return () => window.removeEventListener('click', handleGlobalClick);
+  }, [rfid, barcode, statusMsg]);
+
+  return (
+    <div className="min-h-screen bg-indigo-50 flex flex-col items-center justify-center p-8">
+      <div className="max-w-3xl w-full bg-white p-16 rounded-[3rem] shadow-2xl border border-indigo-100 text-center">
+        <Scan className="w-24 h-24 text-indigo-600 mx-auto mb-8" />
+        <h1 className="text-5xl font-black text-gray-900 mb-4">Borne d'Emprunt</h1>
+        <p className="text-2xl text-gray-500 mb-16">Scannez votre carte étudiant, puis le livre.</p>
+        
+        {statusMsg ? (
+          <div className={cn(
+            "p-12 rounded-3xl text-3xl font-bold transition-all", 
+            statusMsg.includes("Succès") ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+          )}>
+            {statusMsg}
+          </div>
+        ) : (
+          <div className="space-y-8 text-left">
+            <div className={cn("p-8 rounded-3xl border-4 transition-all", rfid ? "border-green-400 bg-green-50" : "border-indigo-500 bg-white")}>
+              <label className="block text-xl font-bold text-gray-700 mb-4 uppercase tracking-wider">1. Carte Étudiant</label>
+              <input 
+                ref={rfidRef} 
+                autoFocus 
+                value={rfid} 
+                onChange={e => setRfid(e.target.value)} 
+                className="w-full bg-transparent text-5xl font-mono font-black text-indigo-600 outline-none placeholder:text-gray-200" 
+                placeholder="--- SCAN ---" 
+              />
+            </div>
+            <div className={cn("p-8 rounded-3xl border-4 transition-all", !rfid ? "opacity-30 grayscale pointer-events-none border-gray-200" : barcode ? "border-green-400 bg-green-50" : "border-indigo-500 bg-white")}>
+              <label className="block text-xl font-bold text-gray-700 mb-4 uppercase tracking-wider">2. Livre</label>
+              <input 
+                ref={barcodeRef} 
+                value={barcode} 
+                onChange={e => setBarcode(e.target.value)} 
+                className="w-full bg-transparent text-5xl font-mono font-black text-indigo-600 outline-none placeholder:text-gray-200" 
+                placeholder="--- SCAN ---" 
+              />
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function KioskReturn() {
+  const [rfid, setRfid] = useState('');
+  const [barcode, setBarcode] = useState('');
+  const [statusMsg, setStatusMsg] = useState('');
+  const rfidRef = useRef<HTMLInputElement>(null);
+  const barcodeRef = useRef<HTMLInputElement>(null);
+
+  const handleReturn = async () => {
+    try {
+      const res = await fetch('/api/return', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rfid_card: rfid, barcode })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setStatusMsg(`Succès ! Livre retourné.`);
+      } else {
+        setStatusMsg(`Erreur : ${data.message}`);
+      }
+    } catch (e) {
+      setStatusMsg("Erreur réseau");
+    }
+    
+    setTimeout(() => {
+      setRfid('');
+      setBarcode('');
+      setStatusMsg('');
+      rfidRef.current?.focus();
+    }, 3000);
+  };
+
+  useEffect(() => {
+    if (rfid.length >= 4 && barcode.length >= 4) {
+      const timer = setTimeout(() => {
+        handleReturn();
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [rfid, barcode]);
+
+  useEffect(() => {
+    if (rfid && !barcode) {
+      barcodeRef.current?.focus();
+    }
+  }, [rfid]);
+
+  useEffect(() => {
+    const handleGlobalClick = () => {
+      if (!statusMsg) {
+        if (!rfid) rfidRef.current?.focus();
+        else if (!barcode) barcodeRef.current?.focus();
+      }
+    };
+    window.addEventListener('click', handleGlobalClick);
+    return () => window.removeEventListener('click', handleGlobalClick);
+  }, [rfid, barcode, statusMsg]);
+
+  return (
+    <div className="min-h-screen bg-emerald-50 flex flex-col items-center justify-center p-8">
+      <div className="max-w-3xl w-full bg-white p-16 rounded-[3rem] shadow-2xl border border-emerald-100 text-center">
+        <History className="w-24 h-24 text-emerald-600 mx-auto mb-8" />
+        <h1 className="text-5xl font-black text-gray-900 mb-4">Borne de Retour</h1>
+        <p className="text-2xl text-gray-500 mb-16">Scannez votre carte étudiant, puis le livre.</p>
+        
+        {statusMsg ? (
+          <div className={cn(
+            "p-12 rounded-3xl text-3xl font-bold transition-all", 
+            statusMsg.includes("Succès") ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+          )}>
+            {statusMsg}
+          </div>
+        ) : (
+          <div className="space-y-8 text-left">
+            <div className={cn("p-8 rounded-3xl border-4 transition-all", rfid ? "border-green-400 bg-green-50" : "border-emerald-500 bg-white")}>
+              <label className="block text-xl font-bold text-gray-700 mb-4 uppercase tracking-wider">1. Carte Étudiant</label>
+              <input 
+                ref={rfidRef} 
+                autoFocus 
+                value={rfid} 
+                onChange={e => setRfid(e.target.value)} 
+                className="w-full bg-transparent text-5xl font-mono font-black text-emerald-600 outline-none placeholder:text-gray-200" 
+                placeholder="--- SCAN ---" 
+              />
+            </div>
+            <div className={cn("p-8 rounded-3xl border-4 transition-all", !rfid ? "opacity-30 grayscale pointer-events-none border-gray-200" : barcode ? "border-green-400 bg-green-50" : "border-emerald-500 bg-white")}>
+              <label className="block text-xl font-bold text-gray-700 mb-4 uppercase tracking-wider">2. Livre</label>
+              <input 
+                ref={barcodeRef} 
+                value={barcode} 
+                onChange={e => setBarcode(e.target.value)} 
+                className="w-full bg-transparent text-5xl font-mono font-black text-emerald-600 outline-none placeholder:text-gray-200" 
+                placeholder="--- SCAN ---" 
+              />
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // --- Main App ---
 
 export default function App() {
@@ -1981,6 +2193,10 @@ export default function App() {
               <Route path="catalog" element={<StudentCatalog />} />
               <Route path="propose" element={<StudentPropose />} />
             </Route>
+
+            {/* Kiosk Routes */}
+            <Route path="/kiosk/borrow" element={<KioskBorrow />} />
+            <Route path="/kiosk/return" element={<KioskReturn />} />
 
             {/* Security Interface */}
             <Route path="/security" element={<ProtectedRoute role="admin"><SecurityScanner /></ProtectedRoute>} />
