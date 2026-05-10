@@ -8,13 +8,10 @@ try {
 
     let sql = `-- Fichier d'importation généré automatiquement\n`;
     sql += `TRUNCATE TABLE borrowings, security_logs, book_items, books RESTART IDENTITY CASCADE;\n\n`;
-    sql += `CREATE TABLE temp_import (\n    cote TEXT,\n    titre TEXT,\n    auteur TEXT,\n    ndinv TEXT\n);\n\n`;
-    sql += `INSERT INTO temp_import (cote, titre, auteur, ndinv) VALUES\n`;
 
-    const values = [];
-    let count = 0;
-    
-    // Pour éviter les doublons de N.D'INV qui pourraient faire planter l'insertion UNIQUE
+    // Extract unique books and all items
+    const booksMap = new Map();
+    const items = [];
     const seenNdinv = new Set();
 
     data.forEach((row, index) => {
@@ -23,44 +20,43 @@ try {
         let auteur = row['AUTEUR'] ? String(row['AUTEUR']).trim().replace(/'/g, "''") : 'Auteur Inconnu';
         let ndinv = row["N.D'INV"] ? String(row["N.D'INV"]).trim().replace(/'/g, "''") : null;
 
-        // Si ndinv est manquant, on génère un code unique pour l'exemplaire
-        if (!ndinv) {
-            ndinv = cote ? `${cote}-AUTO-${index}` : `AUTO-${index}`;
-        }
-        
-        // On s'assure que cote n'est pas vide (utilisé comme code barre du livre)
-        if (!cote) {
-            cote = `NO-COTE-${index}`;
-        }
+        if (!ndinv) ndinv = cote ? `${cote}-AUTO-${index}` : `AUTO-${index}`;
+        if (!cote) cote = `NO-COTE-${index}`;
 
-        // Si le N.D'INV est déjà vu (erreur dans excel), on le rend unique
-        if (seenNdinv.has(ndinv)) {
-            ndinv = `${ndinv}-DUB-${index}`;
-        }
+        if (seenNdinv.has(ndinv)) ndinv = `${ndinv}-DUB-${index}`;
         seenNdinv.add(ndinv);
 
-        values.push(`('${cote}', '${titre}', '${auteur}', '${ndinv}')`);
-        count++;
+        // Map books to avoid duplicate inserts
+        if (!booksMap.has(cote)) {
+            booksMap.set(cote, { title: titre, author: auteur, quantity: 1 });
+        } else {
+            booksMap.get(cote).quantity++;
+        }
+
+        items.push({ cote, ndinv });
     });
 
-    sql += values.join(',\n') + ';\n\n';
-
-    sql += `-- Insertion des livres uniques en groupant par COTE\n`;
-    sql += `INSERT INTO books (barcode, title, author, quantity)\n`;
-    sql += `SELECT cote, MIN(titre), MIN(auteur), COUNT(*)\n`;
-    sql += `FROM temp_import\n`;
-    sql += `GROUP BY cote;\n\n`;
-
-    sql += `-- Insertion des exemplaires (book_items) en reliant à l'ID du livre créé\n`;
-    sql += `INSERT INTO book_items (book_id, unique_code, status)\n`;
-    sql += `SELECT b.id, t.ndinv, 'available'\n`;
-    sql += `FROM temp_import t\n`;
-    sql += `JOIN books b ON b.barcode = t.cote;\n\n`;
+    // 1. Insert Books
+    sql += `-- 1. Insertion des livres uniques\n`;
+    sql += `INSERT INTO books (barcode, title, author, quantity) VALUES\n`;
     
-    sql += `DROP TABLE temp_import;\n`;
+    const booksValues = [];
+    booksMap.forEach((val, key) => {
+        booksValues.push(`('${key}', '${val.title}', '${val.author}', ${val.quantity})`);
+    });
+    sql += booksValues.join(',\n') + ';\n\n';
+
+    // 2. Insert Items using Subqueries
+    sql += `-- 2. Insertion des exemplaires individuels\n`;
+    sql += `INSERT INTO book_items (book_id, unique_code, status) VALUES\n`;
+    
+    const itemsValues = items.map(item => 
+        `((SELECT id FROM books WHERE barcode = '${item.cote}'), '${item.ndinv}', 'available')`
+    );
+    sql += itemsValues.join(',\n') + ';\n';
 
     fs.writeFileSync('import_books.sql', sql, 'utf8');
-    console.log(`Génération réussie ! ${count} exemplaires traités. Fichier import_books.sql créé.`);
+    console.log(`Génération réussie ! ${items.length} exemplaires et ${booksMap.size} livres uniques traités.`);
 
 } catch (err) {
     console.error("Erreur:", err);
