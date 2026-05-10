@@ -1086,31 +1086,24 @@ function StudentChat() {
     await saveMessage(content, 'user');
   };
 
+  const hardcodedAnswers: Record<string, string> = {
+    "Comment emprunter un livre ?": "Pour emprunter un livre, présentez-vous à la borne d'emprunt avec votre carte étudiant et le livre que vous souhaitez emprunter. Scannez d'abord votre carte, puis le code-barres du livre.",
+    "Quelle est la durée d'emprunt ?": "La durée standard d'un emprunt est de 30 jours. Passé ce délai, un rappel vous sera envoyé.",
+    "Que faire si je perds ma carte ?": "Si vous perdez votre carte, veuillez vous rendre sur la page d'accueil et faire une demande de nouvelle carte.",
+    "Comment retourner un livre ?": "Pour retourner un livre, rendez-vous à la borne de retour. Scannez votre carte étudiant puis le livre, et le tour est joué !"
+  };
+
   const handleAIQuestion = async (question: string) => {
     if (!user) return;
     setMessages(prev => [...prev, { role: 'user', content: question }]);
-    setLoading(true);
     await saveMessage(question, 'user');
     
-    try {
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: question,
-        config: {
-          systemInstruction: "Tu es l'assistant intelligent de la bibliothèque MY BIBIO. Réponds de manière concise, polie et utile."
-        }
-      });
-      const aiText = response.text || "Désolé, je ne peux pas répondre pour le moment.";
-      setMessages(prev => [...prev, { role: 'assistant', content: aiText }]);
-      await saveMessage(aiText, 'assistant');
-    } catch (err) {
-      const errorMsg = "Une erreur est survenue lors de la connexion à l'IA.";
-      setMessages(prev => [...prev, { role: 'assistant', content: errorMsg }]);
-      await saveMessage(errorMsg, 'assistant');
-    } finally {
-      setLoading(false);
-    }
+    const answer = hardcodedAnswers[question] || "Message reçu !";
+    
+    setTimeout(async () => {
+      setMessages(prev => [...prev, { role: 'assistant', content: answer }]);
+      await saveMessage(answer, 'assistant');
+    }, 300);
   };
 
   useEffect(() => {
@@ -1170,7 +1163,6 @@ function StudentChat() {
                   <ReactMarkdown>{m.content}</ReactMarkdown>
                 </div>
               ))}
-              {loading && <div className="text-xs text-gray-400 animate-pulse italic">L'IA réfléchit...</div>}
             </div>
 
             <div className="p-4 bg-white border-t border-gray-100">
