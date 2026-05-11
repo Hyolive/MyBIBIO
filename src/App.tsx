@@ -94,6 +94,8 @@ function Navbar() {
               <>
                 <Link to="/admin" className="hover:text-indigo-600 transition-colors">Dashboard</Link>
                 <Link to="/admin/books" className="hover:text-indigo-600 transition-colors">Livres</Link>
+                <Link to="/kiosk/borrow" target="_blank" className="hover:text-indigo-600 transition-colors">Borne Emprunt</Link>
+                <Link to="/kiosk/return" target="_blank" className="hover:text-indigo-600 transition-colors">Borne Retour</Link>
                 <Link to="/admin/students" className="hover:text-indigo-600 transition-colors">Étudiants</Link>
                 <Link to="/admin/proposals" className="hover:text-indigo-600 transition-colors">Propositions</Link>
                 <Link to="/admin/requests" className="hover:text-indigo-600 transition-colors">Demandes</Link>
@@ -411,18 +413,20 @@ function AdminDashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <QuickActionCard 
-          title="Nouvel Emprunt" 
-          description="Scanner livre + carte étudiant"
-          icon={<Scan className="w-8 h-8" />}
-          link="/admin/borrow"
+          title="Borne Emprunt" 
+          description="Ouvrir la borne d'emprunt"
+          icon={<BookUp className="w-8 h-8" />}
+          link="/kiosk/borrow"
           color="indigo"
+          target="_blank"
         />
         <QuickActionCard 
-          title="Retour de Livre" 
-          description="Scanner le livre pour le rendre disponible"
+          title="Borne Retour" 
+          description="Ouvrir la borne de retour"
           icon={<History className="w-8 h-8" />}
-          link="/admin/return"
+          link="/kiosk/return"
           color="emerald"
+          target="_blank"
         />
         <QuickActionCard 
           title="Demandes de Cartes" 
@@ -457,9 +461,9 @@ function StatCard({ icon, label, value, color }: { icon: React.ReactNode, label:
   );
 }
 
-function QuickActionCard({ title, description, icon, link, color }: { title: string, description: string, icon: React.ReactNode, link: string, color: string }) {
+function QuickActionCard({ title, description, icon, link, color, target }: { title: string, description: string, icon: React.ReactNode, link: string, color: string, target?: string }) {
   return (
-    <Link to={link} className="group">
+    <Link to={link} target={target} className="group">
       <div className="bg-white p-6 sm:p-8 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-4 sm:gap-6">
         <div className={cn("p-4 rounded-2xl transition-all group-hover:scale-110 shrink-0", `bg-${color}-50 text-${color}-600`)}>
           {icon}
