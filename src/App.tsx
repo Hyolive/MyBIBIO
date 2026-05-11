@@ -25,7 +25,8 @@ import {
   ArrowLeft,
   Upload,
   FileText,
-  Image as ImageIcon
+  Image as ImageIcon,
+  BookUp
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import * as XLSX from 'xlsx';
