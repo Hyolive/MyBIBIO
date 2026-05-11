@@ -623,12 +623,13 @@ function AdminBorrow() {
     }
   }, [rfid, barcode]);
 
-  // Focus management
-  useEffect(() => {
-    if (rfid && !barcode) {
+  // Handle scanner "Enter" key to jump to next field
+  const handleRfidKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && rfid.length > 0) {
+      e.preventDefault();
       barcodeRef.current?.focus();
     }
-  }, [rfid]);
+  };
 
   return (
     <div className="p-8 max-w-2xl mx-auto">
@@ -660,6 +661,7 @@ function AdminBorrow() {
               autoFocus
               value={rfid}
               onChange={e => setRfid(e.target.value)}
+              onKeyDown={handleRfidKeyDown}
               className="w-full bg-transparent text-2xl font-mono font-bold text-indigo-600 outline-none placeholder:text-gray-300"
               placeholder="--- --- ---"
             />
@@ -1996,11 +1998,13 @@ function KioskBorrow() {
     }
   }, [rfid, barcode]);
 
-  useEffect(() => {
-    if (rfid && !barcode) {
+  // Handle scanner "Enter" key to jump to next field
+  const handleRfidKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && rfid.length > 0) {
+      e.preventDefault();
       barcodeRef.current?.focus();
     }
-  }, [rfid]);
+  };
 
   // Keep focus on the active input if user clicks away
   useEffect(() => {
@@ -2037,6 +2041,7 @@ function KioskBorrow() {
                 autoFocus 
                 value={rfid} 
                 onChange={e => setRfid(e.target.value)} 
+                onKeyDown={handleRfidKeyDown}
                 className="w-full bg-transparent text-5xl font-mono font-black text-indigo-600 outline-none placeholder:text-gray-200" 
                 placeholder="--- SCAN ---" 
               />
@@ -2099,11 +2104,13 @@ function KioskReturn() {
     }
   }, [rfid, barcode]);
 
-  useEffect(() => {
-    if (rfid && !barcode) {
+  // Handle scanner "Enter" key to jump to next field
+  const handleRfidKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && rfid.length > 0) {
+      e.preventDefault();
       barcodeRef.current?.focus();
     }
-  }, [rfid]);
+  };
 
   useEffect(() => {
     const handleGlobalClick = () => {
@@ -2139,6 +2146,7 @@ function KioskReturn() {
                 autoFocus 
                 value={rfid} 
                 onChange={e => setRfid(e.target.value)} 
+                onKeyDown={handleRfidKeyDown}
                 className="w-full bg-transparent text-5xl font-mono font-black text-emerald-600 outline-none placeholder:text-gray-200" 
                 placeholder="--- SCAN ---" 
               />
