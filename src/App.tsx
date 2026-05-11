@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, Link, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, Link, useNavigate, Outlet } from 'react-router-dom';
 import { Toaster, toast } from 'sonner';
 import { 
   Book as BookIcon, 
@@ -2217,16 +2217,7 @@ function AdminLayout() {
   return (
     <>
       <Navbar />
-      <Routes>
-        <Route index element={<AdminDashboard />} />
-        <Route path="books" element={<AdminBooks />} />
-        <Route path="borrow" element={<AdminBorrow />} />
-        <Route path="return" element={<AdminReturn />} />
-        <Route path="students" element={<AdminStudents />} />
-        <Route path="proposals" element={<AdminProposals />} />
-        <Route path="requests" element={<AdminCardRequests />} />
-        <Route path="messages" element={<AdminMessages />} />
-      </Routes>
+      <Outlet />
     </>
   );
 }
@@ -2235,11 +2226,7 @@ function StudentLayout() {
   return (
     <>
       <Navbar />
-      <Routes>
-        <Route index element={<StudentDashboard />} />
-        <Route path="catalog" element={<StudentCatalog />} />
-        <Route path="propose" element={<StudentPropose />} />
-      </Routes>
+      <Outlet />
       <StudentChat />
     </>
   );
